@@ -3,27 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="king-agents-build" content="2026.09.28.2" />
+  <meta name="theme-color" content="#212121" />
+  <meta name="king-agents-build" content="2026.09.28.3" />
   <title>King Agents</title>
-  <meta name="description" content="King Agents — multi-agent AI workspace" />
-  <link rel="stylesheet" href="/styles.css?v=20260928.2" />
+  <meta name="description" content="King Agents — مساحة عمل عربية متعددة الوكلاء" />
+  <link rel="stylesheet" href="/styles.css?v=20260928.3" />
 </head>
-<body data-build="2026.09.28.2">
-  <main class="app">
-    <aside id="sidebar" class="sidebar">
-      <div class="brandRow">
+<body data-build="2026.09.28.3">
+  <main class="app" id="app">
+    <div id="sidebarBackdrop" class="sidebarBackdrop" aria-hidden="true"></div>
+
+    <aside id="sidebar" class="sidebar" aria-label="القائمة الجانبية">
+      <div class="sidebarHeader">
         <div class="brand">
-          <div class="crown">♛</div>
-          <div>
+          <div class="brandMark" aria-hidden="true">K</div>
+          <div class="brandText">
             <strong>King Agents</strong>
             <span>AI Workspace</span>
           </div>
         </div>
+
+        <button id="sidebarToggle" class="ghostButton desktopOnly" type="button" aria-label="طي القائمة الجانبية" title="طي القائمة">
+          <span aria-hidden="true">‹</span>
+        </button>
       </div>
 
       <button id="newChat" class="newChat" type="button">
-        <span>＋</span>
-        <b>محادثة جديدة</b>
+        <span class="newChatIcon" aria-hidden="true">＋</span>
+        <span class="newChatLabel">محادثة جديدة</span>
       </button>
 
       <div class="sectionLabel">الوكلاء</div>
@@ -31,7 +38,7 @@
 
       <div class="providerStatus" aria-live="polite">
         <span id="providerDot" class="providerDot checking"></span>
-        <div>
+        <div class="providerText">
           <strong id="providerText">جاري فحص OpenRouter</strong>
           <span>Free Router</span>
         </div>
@@ -40,34 +47,48 @@
 
     <section class="workspace">
       <header class="topbar">
-        <button id="menuToggle" class="iconButton" type="button" aria-label="فتح القائمة">☰</button>
+        <div class="topbarStart">
+          <button id="menuToggle" class="ghostButton mobileMenu" type="button" aria-label="فتح القائمة">☰</button>
 
-        <div class="modelPicker" aria-label="الوكيل الحالي">
-          <div class="modelIcon">✦</div>
-          <div>
-            <strong id="agentTitle">الوكيل العام</strong>
-            <span id="agentDesc">OpenRouter Free Router</span>
+          <div class="agentPill" aria-label="الوكيل الحالي">
+            <div class="agentPillIcon" aria-hidden="true">✦</div>
+            <div class="agentPillText">
+              <strong id="agentTitle">الوكيل العام</strong>
+              <span id="agentDesc">OpenRouter Free Router</span>
+            </div>
           </div>
         </div>
 
-        <div class="avatarUser" aria-label="King Agents">K</div>
+        <div class="topbarEnd">
+          <span class="buildBadge">King Agents</span>
+          <div class="avatarUser" aria-label="King Agents">K</div>
+        </div>
       </header>
 
       <section id="messages" class="messages" aria-live="polite"></section>
 
       <div class="composerDock">
         <form id="composer" class="composer">
-          <textarea id="input" rows="1" placeholder="اكتب رسالتك هنا..." aria-label="اكتب رسالتك"></textarea>
-          <div class="composerActions">
-            <span class="keyboardHint">Enter للإرسال · Shift+Enter لسطر جديد</span>
-            <button id="send" class="sendButton" type="submit" aria-label="إرسال">↑</button>
+          <textarea id="input" rows="1" maxlength="12000" placeholder="أرسل رسالة إلى King Agents" aria-label="اكتب رسالتك"></textarea>
+
+          <div class="composerFooter">
+            <div class="composerMeta">
+              <span id="activeAgentLabel">الوكيل العام</span>
+              <span class="separator">•</span>
+              <span>OpenRouter</span>
+            </div>
+
+            <button id="send" class="sendButton" type="submit" aria-label="إرسال">
+              <span aria-hidden="true">↑</span>
+            </button>
           </div>
         </form>
-        <div class="disclaimer">King Agents قد يقدم معلومات غير دقيقة. يرجى التحقق من التفاصيل المهمة.</div>
+
+        <div class="disclaimer">قد يخطئ الذكاء الاصطناعي. راجع المعلومات المهمة.</div>
       </div>
     </section>
   </main>
 
-  <script type="module" src="/app.js?v=20260928.2"></script>
+  <script type="module" src="/app.js?v=20260928.3"></script>
 </body>
 </html>
