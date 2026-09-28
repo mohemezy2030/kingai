@@ -9,6 +9,6 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "check": "node --check server.js && node --check api/_shared.js && node --check api/chat.js && node --check api/health.js && node --check public/app.js"
+    "check": "node --check server.js && node --check lib/agents.js && node --check api/chat.js && node --check api/health.js && node --check public/app.js"
   }
 }
