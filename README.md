@@ -51,3 +51,7 @@ docker run --env-file .env -p 3000:3000 king-agents
 ```
 
 لا ترفع `.env` أو مفاتيح API إلى GitHub.
+
+## Vercel
+
+Deployment is configured through `vercel.json`. Add `OPENROUTER_API_KEY` in Vercel Environment Variables before redeploying.
