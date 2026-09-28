@@ -1,14 +1,15 @@
-const BUILD_ID = '2026.09.28.2';
-const STORAGE_KEY = 'king-agent-histories-v2';
+const BUILD_ID = '2026.09.28.3';
+const STORAGE_KEY = 'king-agent-histories-v3';
 const SELECTED_KEY = 'king-agent';
+const SIDEBAR_KEY = 'king-sidebar-collapsed';
 
 const AGENTS = [
-  ['orchestrator','الوكيل العام','OpenRouter Free Router','♛'],
-  ['planner','وكيل التخطيط','التخطيط والهندسة المعمارية','✦'],
+  ['orchestrator','الوكيل العام','يوجّه المهمة للوكيل الأنسب','✦'],
+  ['planner','وكيل التخطيط','التخطيط والهندسة المعمارية','◇'],
   ['coding','مساعد البرمجة','كتابة وتحليل الأكواد','</>'],
-  ['frontend','مساعد الواجهات','تصميم وتطوير الواجهات','✎'],
-  ['backend','مساعد الباك إند','APIs والخدمات والتكاملات','⚙'],
-  ['database','مساعد البيانات','قواعد البيانات والاستعلامات','▥'],
+  ['frontend','مساعد الواجهات','تصميم وتطوير الواجهات','UI'],
+  ['backend','مساعد الباك إند','APIs والخدمات والتكاملات','API'],
+  ['database','مساعد البيانات','قواعد البيانات والاستعلامات','DB'],
   ['security','مساعد الأمن','الأمن السيبراني والمراجعة','◈'],
   ['review','مساعد المراجعة','فحص الجودة والدقة','✓'],
   ['fix','مساعد الإصلاح','إصلاح الأخطاء والمشاكل','⌁'],
@@ -19,19 +20,15 @@ const VALID_AGENT_IDS = new Set(AGENTS.map(([id]) => id));
 const $ = id => document.getElementById(id);
 
 function loadHistories() {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
-  } catch {}
-
-  try {
-    const legacy = JSON.parse(localStorage.getItem('king-messages') || 'null');
-    if (Array.isArray(legacy) && legacy.length) {
-      localStorage.removeItem('king-messages');
-      return { orchestrator: legacy };
-    }
-  } catch {}
-
+  for (const key of [STORAGE_KEY, 'king-agent-histories-v2']) {
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) || '{}');
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && Object.keys(parsed).length) {
+        if (key !== STORAGE_KEY) localStorage.removeItem(key);
+        return parsed;
+      }
+    } catch {}
+  }
   return {};
 }
 
@@ -54,9 +51,9 @@ function save() {
 
   const compact = {};
   for (const [agentId, messages] of Object.entries(histories)) {
-    if (!Array.isArray(messages)) continue;
+    if (!VALID_AGENT_IDS.has(agentId) || !Array.isArray(messages)) continue;
     compact[agentId] = messages.slice(-20).map(message => ({
-      role: message.role,
+      role: message.role === 'assistant' ? 'assistant' : 'user',
       content: String(message.content || '').slice(0, 20000),
       ...(message.meta ? { meta: String(message.meta).slice(0, 500) } : {})
     }));
@@ -65,11 +62,9 @@ function save() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(compact));
   } catch {
-    const reduced = {};
-    for (const [agentId, messages] of Object.entries(compact)) {
-      reduced[agentId] = messages.slice(-8);
-    }
     try {
+      const reduced = {};
+      for (const [agentId, messages] of Object.entries(compact)) reduced[agentId] = messages.slice(-8);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(reduced));
     } catch {}
   }
@@ -85,9 +80,34 @@ function escapeHtml(value = '') {
   }[char]));
 }
 
+function formatText(text) {
+  return escapeHtml(text)
+    .replace(/**(.+?)**/g, '<strong>$1</strong>')
+    .replace(/\`([^\`\n]+)\`/g, '<code class="inlineCode">$1</code>')
+    .replace(/\n/g, '<br>');
+}
+
+function formatAssistantContent(value = '') {
+  const raw = String(value);
+  const parts = raw.split(/\`\`\`/g);
+
+  return parts.map((part, index) => {
+    if (index % 2 === 0) return formatText(part);
+
+    const lines = part.replace(/^\n/, '').split('\n');
+    let language = '';
+    if (lines.length > 1 && /^[a-z0-9_+#.-]{1,24}$/i.test(lines[0].trim())) {
+      language = lines.shift().trim();
+    }
+
+    const code = escapeHtml(lines.join('\n').replace(/\n$/, ''));
+    return `<div class="codeBlock">${language ? `<div class="codeHeader">${escapeHtml(language)}</div>` : ''}<pre><code>${code}</code></pre></div>`;
+  }).join('');
+}
+
 function renderAgents() {
   $('agents').innerHTML = AGENTS.map(([id, name, desc, icon]) => `
-    <button class="agent ${selected === id ? 'active' : ''}" data-id="${id}" type="button">
+    <button class="agent ${selected === id ? 'active' : ''}" data-id="${id}" type="button" title="${name}">
       <span class="agentIcon">${icon}</span>
       <span class="agentText">
         <b>${name}</b>
@@ -104,8 +124,7 @@ function renderAgents() {
       renderHeader();
       renderMessages();
       updateControls();
-
-      if (window.innerWidth < 900) $('sidebar').classList.remove('open');
+      closeMobileSidebar();
     });
   });
 }
@@ -114,46 +133,62 @@ function renderHeader() {
   const agent = AGENTS.find(item => item[0] === selected) || AGENTS[0];
   $('agentTitle').textContent = agent[1];
   $('agentDesc').textContent = agent[2];
+  $('activeAgentLabel').textContent = agent[1];
 }
 
 function emptyState() {
   return `
     <div class="hero">
-      <div class="heroCrown">♛</div>
+      <div class="heroLogo" aria-hidden="true">K</div>
       <h1>كيف أقدر أساعدك اليوم؟</h1>
-      <p>اختر وكيلاً متخصصًا أو اطرح سؤالك مباشرة. كل وكيل يحتفظ بسياق محادثته بشكل مستقل.</p>
+      <p>اختر وكيلاً متخصصًا أو اكتب طلبك مباشرة، وسيتولى King Agents توجيه المهمة وتنفيذها.</p>
 
-      <div class="cards">
+      <div class="suggestions">
         <button type="button" data-agent="coding" data-prompt="ساعدني في حل مشكلة برمجية">
-          <span class="ico cyan">&lt;/&gt;</span>
-          <b>مساعدة برمجية</b>
-          <small>كتابة أو مراجعة أو إصلاح الكود</small>
-          <i>→</i>
+          <span class="suggestionIcon code">⌘</span>
+          <span><b>مساعدة برمجية</b><small>كتابة، مراجعة أو إصلاح الكود</small></span>
+          <i>↗</i>
         </button>
 
         <button type="button" data-agent="planner" data-prompt="خطط لي هذا المشروع خطوة بخطوة">
-          <span class="ico purple">✦</span>
-          <b>تخطيط مشروع</b>
-          <small>خطة تنفيذ مرتبة وواضحة</small>
-          <i>→</i>
+          <span class="suggestionIcon plan">◇</span>
+          <span><b>تخطيط مشروع</b><small>حوّل الفكرة إلى خطوات تنفيذ واضحة</small></span>
+          <i>↗</i>
         </button>
 
         <button type="button" data-agent="database" data-prompt="حلل لي هذه البيانات أو قاعدة البيانات">
-          <span class="ico yellow">▥</span>
-          <b>تحليل بيانات</b>
-          <small>قواعد بيانات واستعلامات وتحليل</small>
-          <i>→</i>
+          <span class="suggestionIcon data">▥</span>
+          <span><b>تحليل بيانات</b><small>قواعد بيانات، استعلامات وتحليل</small></span>
+          <i>↗</i>
         </button>
 
         <button type="button" data-agent="security" data-prompt="راجع هذا العمل أمنيًا وحدد المشاكل">
-          <span class="ico blue">◈</span>
-          <b>مراجعة أمنية</b>
-          <small>فحص المخاطر واقتراح الإصلاحات</small>
-          <i>→</i>
+          <span class="suggestionIcon security">◈</span>
+          <span><b>مراجعة أمنية</b><small>اكتشاف المخاطر واقتراح الإصلاحات</small></span>
+          <i>↗</i>
         </button>
       </div>
     </div>
   `;
+}
+
+function attachMessageActions() {
+  document.querySelectorAll('[data-copy-message]').forEach(button => {
+    button.addEventListener('click', async () => {
+      const index = Number(button.dataset.copyMessage);
+      const message = currentMessages()[index];
+      if (!message) return;
+
+      try {
+        await navigator.clipboard.writeText(message.content);
+        button.textContent = 'تم النسخ';
+        setTimeout(() => { button.textContent = 'نسخ'; }, 1200);
+      } catch {
+        button.textContent = 'تعذر النسخ';
+        setTimeout(() => { button.textContent = 'نسخ'; }, 1200);
+      }
+    });
+  });
 }
 
 function renderMessages() {
@@ -178,32 +213,42 @@ function renderMessages() {
         $('input').focus();
       });
     });
-
     return;
   }
 
-  const rows = messages.map(message => `
-    <article class="messageRow ${message.role}">
-      ${message.role === 'assistant' ? '<div class="botAvatar">♛</div>' : ''}
-      <div class="bubble">
-        <div class="content">${escapeHtml(message.content)}</div>
-        ${message.meta ? `<div class="modelMeta">${escapeHtml(message.meta)}</div>` : ''}
-      </div>
-    </article>
-  `).join('');
+  const rows = messages.map((message, index) => {
+    const isAssistant = message.role === 'assistant';
+    const body = isAssistant ? formatAssistantContent(message.content) : formatText(message.content);
+
+    return `
+      <article class="messageRow ${isAssistant ? 'assistant' : 'user'}">
+        ${isAssistant ? '<div class="botAvatar">K</div>' : ''}
+        <div class="messageContent">
+          <div class="bubble">${body}</div>
+          ${isAssistant ? `
+            <div class="messageActions">
+              <button type="button" data-copy-message="${index}">نسخ</button>
+              ${message.meta ? `<span>${escapeHtml(message.meta)}</span>` : ''}
+            </div>
+          ` : ''}
+        </div>
+      </article>
+    `;
+  }).join('');
 
   const pending = pendingAgent === selected
-    ? '<article class="messageRow assistant"><div class="botAvatar">♛</div><div class="bubble typing">جاري التنفيذ<span>.</span><span>.</span><span>.</span></div></article>'
+    ? '<article class="messageRow assistant"><div class="botAvatar">K</div><div class="messageContent"><div class="bubble typing"><span></span><span></span><span></span></div></div></article>'
     : '';
 
   $('messages').innerHTML = rows + pending;
+  attachMessageActions();
   $('messages').lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' });
 }
 
 function resizeInput() {
   const input = $('input');
   input.style.height = 'auto';
-  input.style.height = Math.min(input.scrollHeight, 160) + 'px';
+  input.style.height = Math.min(input.scrollHeight, 180) + 'px';
 }
 
 function updateControls() {
@@ -211,29 +256,46 @@ function updateControls() {
   $('newChat').disabled = pendingAgent === selected;
 }
 
+function closeMobileSidebar() {
+  $('sidebar').classList.remove('open');
+  $('sidebarBackdrop').classList.remove('show');
+}
+
+function openMobileSidebar() {
+  $('sidebar').classList.add('open');
+  $('sidebarBackdrop').classList.add('show');
+}
+
+function applySidebarState() {
+  const collapsed = localStorage.getItem(SIDEBAR_KEY) === '1';
+  $('app').classList.toggle('sidebarCollapsed', collapsed);
+  $('sidebarToggle').querySelector('span').textContent = collapsed ? '›' : '‹';
+  $('sidebarToggle').setAttribute('aria-label', collapsed ? 'توسيع القائمة الجانبية' : 'طي القائمة الجانبية');
+}
+
 async function checkHealth() {
   const dot = $('providerDot');
-  const text = $('providerText');
+  const label = $('providerText');
 
   dot.className = 'providerDot checking';
-  text.textContent = 'جاري فحص OpenRouter';
+  label.textContent = 'جاري فحص OpenRouter';
 
   try {
-    const response = await fetch('/api/health', { cache: 'no-store' });
+    const response = await fetch('/api/health?b=' + encodeURIComponent(BUILD_ID), { cache: 'no-store' });
     const data = await response.json();
 
-    if (!response.ok || !data.ok) throw new Error('health check failed');
+    if (!response.ok || !data.ok) throw new Error('health');
 
     if (data.openrouterConfigured) {
       dot.className = 'providerDot ready';
-      text.textContent = data.build === BUILD_ID ? 'OpenRouter جاهز' : 'OpenRouter جاهز · نسخة مختلفة';
+      label.textContent = data.build === BUILD_ID ? 'OpenRouter جاهز' : 'OpenRouter جاهز';
     } else {
       dot.className = 'providerDot warning';
-      text.textContent = 'أضف OPENROUTER_API_KEY';
+      label.textContent = 'مفتاح OpenRouter غير مضاف';
     }
   } catch {
     dot.className = 'providerDot error';
-    text.textContent = 'تعذر الاتصال بالخادم';
+    label.textContent = 'تعذر الاتصال بالخادم';
   }
 }
 
@@ -242,13 +304,11 @@ async function send() {
   if (!text || pendingAgent) return;
 
   const agentId = selected;
-  const before = currentMessages(agentId);
-  const nextMessages = [...before, { role: 'user', content: text }];
+  const nextMessages = [...currentMessages(agentId), { role: 'user', content: text }];
   setMessages(agentId, nextMessages);
 
   $('input').value = '';
   resizeInput();
-
   pendingAgent = agentId;
   save();
   renderMessages();
@@ -265,38 +325,29 @@ async function send() {
     });
 
     let data = {};
-    try {
-      data = await response.json();
-    } catch {}
+    try { data = await response.json(); } catch {}
 
-    if (!response.ok) {
-      throw new Error(data.error || 'تعذر تنفيذ الطلب.');
-    }
+    if (!response.ok) throw new Error(data.error || 'تعذر تنفيذ الطلب.');
 
-    const updated = [
+    setMessages(agentId, [
       ...currentMessages(agentId),
       {
         role: 'assistant',
         content: data.reply,
         meta: [data.agentName, data.model].filter(Boolean).join(' · ')
       }
-    ];
-
-    setMessages(agentId, updated);
+    ]);
   } catch (error) {
-    const updated = [
+    setMessages(agentId, [
       ...currentMessages(agentId),
       {
         role: 'assistant',
         content: 'تعذر إكمال الطلب: ' + (error?.message || String(error))
       }
-    ];
-
-    setMessages(agentId, updated);
+    ]);
   } finally {
     pendingAgent = null;
     save();
-
     if (selected === agentId) renderMessages();
     updateControls();
     checkHealth();
@@ -322,24 +373,32 @@ $('input').addEventListener('keydown', event => {
 
 $('newChat').addEventListener('click', () => {
   if (pendingAgent === selected) return;
-
   setMessages(selected, []);
   save();
   renderMessages();
-
   $('input').value = '';
   resizeInput();
   updateControls();
   $('input').focus();
 });
 
-$('menuToggle').addEventListener('click', () => {
-  $('sidebar').classList.toggle('open');
+$('menuToggle').addEventListener('click', openMobileSidebar);
+$('sidebarBackdrop').addEventListener('click', closeMobileSidebar);
+
+$('sidebarToggle').addEventListener('click', () => {
+  const collapsed = !$('app').classList.contains('sidebarCollapsed');
+  localStorage.setItem(SIDEBAR_KEY, collapsed ? '1' : '0');
+  applySidebarState();
+});
+
+window.addEventListener('keydown', event => {
+  if (event.key === 'Escape') closeMobileSidebar();
 });
 
 renderAgents();
 renderHeader();
 renderMessages();
+applySidebarState();
 resizeInput();
 updateControls();
 checkHealth();
