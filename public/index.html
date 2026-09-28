@@ -3,44 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="king-agents-build" content="2026.09.28.2" />
   <title>King Agents</title>
   <meta name="description" content="King Agents — multi-agent AI workspace" />
-  <link rel="stylesheet" href="/styles.css" />
+  <link rel="stylesheet" href="/styles.css?v=20260928.2" />
 </head>
-<body>
+<body data-build="2026.09.28.2">
   <main class="app">
     <aside id="sidebar" class="sidebar">
       <div class="brandRow">
-        <div class="brand"><div class="crown">♛</div><strong>King Agents</strong></div>
-        <button class="tinyBtn" aria-label="طي القائمة">◧</button>
+        <div class="brand">
+          <div class="crown">♛</div>
+          <div>
+            <strong>King Agents</strong>
+            <span>AI Workspace</span>
+          </div>
+        </div>
       </div>
-      <button id="newChat" class="newChat" type="button"><span>＋</span><b>محادثة جديدة</b></button>
-      <div class="quickNav"><button type="button">▣ <span>المحادثات</span></button><button type="button">◉ <span>المستكشف</span></button></div>
+
+      <button id="newChat" class="newChat" type="button">
+        <span>＋</span>
+        <b>محادثة جديدة</b>
+      </button>
+
       <div class="sectionLabel">الوكلاء</div>
       <nav id="agents" class="agents" aria-label="اختيار الوكيل"></nav>
-      <div class="profileBar"><div class="profileIcon">♛</div><div><strong>King Agents</strong><span>ذكاء اصطناعي بلا حدود</span></div><span class="dots">⋮</span></div>
+
+      <div class="providerStatus" aria-live="polite">
+        <span id="providerDot" class="providerDot checking"></span>
+        <div>
+          <strong id="providerText">جاري فحص OpenRouter</strong>
+          <span>Free Router</span>
+        </div>
+      </div>
     </aside>
+
     <section class="workspace">
       <header class="topbar">
         <button id="menuToggle" class="iconButton" type="button" aria-label="فتح القائمة">☰</button>
-        <button id="agentSwitcher" class="modelPicker" type="button">
+
+        <div class="modelPicker" aria-label="الوكيل الحالي">
           <div class="modelIcon">✦</div>
-          <div><strong id="agentTitle">الوكيل العام</strong><span id="agentDesc">OpenRouter</span></div>
-          <span>⌄</span>
-        </button>
-        <div class="topActions"><button>⌕</button><button>◔</button><div class="avatarUser">M</div></div>
+          <div>
+            <strong id="agentTitle">الوكيل العام</strong>
+            <span id="agentDesc">OpenRouter Free Router</span>
+          </div>
+        </div>
+
+        <div class="avatarUser" aria-label="King Agents">K</div>
       </header>
+
       <section id="messages" class="messages" aria-live="polite"></section>
+
       <div class="composerDock">
         <form id="composer" class="composer">
-          <div class="tools"><button type="button">📎</button><button type="button">◎</button><button type="button">☷</button></div>
           <textarea id="input" rows="1" placeholder="اكتب رسالتك هنا..." aria-label="اكتب رسالتك"></textarea>
-          <button id="send" class="sendButton" type="submit" aria-label="إرسال">↑</button>
+          <div class="composerActions">
+            <span class="keyboardHint">Enter للإرسال · Shift+Enter لسطر جديد</span>
+            <button id="send" class="sendButton" type="submit" aria-label="إرسال">↑</button>
+          </div>
         </form>
         <div class="disclaimer">King Agents قد يقدم معلومات غير دقيقة. يرجى التحقق من التفاصيل المهمة.</div>
       </div>
     </section>
   </main>
-  <script type="module" src="/app.js"></script>
+
+  <script type="module" src="/app.js?v=20260928.2"></script>
 </body>
 </html>
