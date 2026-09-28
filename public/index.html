@@ -4,26 +4,67 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>King Agents</title>
-  <meta name="description" content="Multi-agent AI workspace powered by OpenRouter" />
+  <meta name="description" content="King Agents — multi-agent AI workspace" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <main class="shell">
-    <aside class="sidebar">
-      <div class="brand"><div class="logo">K</div><div><b>King Agents</b><span>AI Workspace</span></div></div>
-      <div class="label">الوكلاء</div>
-      <nav id="agents" class="agents" aria-label="الوكلاء"></nav>
+  <main class="app">
+    <aside id="sidebar" class="sidebar">
+      <div class="sidebarTop">
+        <div class="brand">
+          <div class="brandMark">K</div>
+          <div>
+            <strong>King Agents</strong>
+            <span>AI Workspace</span>
+          </div>
+        </div>
+        <button id="newChat" class="newChat" type="button" aria-label="محادثة جديدة">
+          <span class="plus">＋</span>
+          <span>محادثة جديدة</span>
+        </button>
+      </div>
+
+      <div class="sidebarLabel">الوكلاء</div>
+      <nav id="agents" class="agents" aria-label="اختيار الوكيل"></nav>
+
+      <div class="sidebarFooter">
+        <div class="providerDot"></div>
+        <div>
+          <strong>OpenRouter</strong>
+          <span>Free Router</span>
+        </div>
+      </div>
     </aside>
+
     <section class="workspace">
       <header class="topbar">
-        <div><h1 id="agentTitle">وكيل تنظيم العمل</h1><p id="agentDesc"></p></div>
-        <div class="status"><i></i> OpenRouter Free Router</div>
+        <button id="menuToggle" class="iconButton" type="button" aria-label="فتح القائمة">☰</button>
+        <div class="titleGroup">
+          <button id="agentSwitcher" class="agentSwitcher" type="button">
+            <span id="agentTitle">وكيل تنظيم العمل</span>
+            <span class="chevron">⌄</span>
+          </button>
+          <p id="agentDesc"></p>
+        </div>
+        <div class="topActions">
+          <span class="status"><i></i> متصل</span>
+        </div>
       </header>
+
       <section id="messages" class="messages" aria-live="polite"></section>
-      <form id="composer" class="composer">
-        <textarea id="input" rows="3" placeholder="اكتب المهمة هنا…" aria-label="المهمة"></textarea>
-        <div class="composerFoot"><span>Enter للإرسال · Shift+Enter لسطر جديد</span><button id="send" type="submit">إرسال</button></div>
-      </form>
+
+      <div class="composerDock">
+        <form id="composer" class="composer">
+          <textarea id="input" rows="1" placeholder="أرسل رسالة إلى King Agents" aria-label="اكتب رسالتك"></textarea>
+          <div class="composerBottom">
+            <div class="composerTools">
+              <span class="hint">Enter للإرسال · Shift+Enter لسطر جديد</span>
+            </div>
+            <button id="send" class="sendButton" type="submit" aria-label="إرسال">↑</button>
+          </div>
+        </form>
+        <div class="disclaimer">قد يخطئ الذكاء الاصطناعي. راجع المعلومات المهمة.</div>
+      </div>
     </section>
   </main>
   <script type="module" src="/app.js"></script>
