@@ -4,7 +4,7 @@ import {
   resolveAgentId,
   runOpenRouter,
   sanitizeMessages
-} from './_shared.js';
+} from '../lib/agents.js';
 
 export const config = {
   maxDuration: 60
