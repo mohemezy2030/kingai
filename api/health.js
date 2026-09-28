@@ -1,4 +1,4 @@
-import { BUILD_ID } from './_shared.js';
+import { BUILD_ID } from '../lib/agents.js';
 
 export default function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
