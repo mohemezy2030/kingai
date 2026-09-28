@@ -9,7 +9,7 @@ import {
   resolveAgentId,
   runOpenRouter,
   sanitizeMessages
-} from './api/_shared.js';
+} from './lib/agents.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, 'public');
